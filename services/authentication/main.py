@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 
-app = FastAPI()
+app = FastAPI(title="Auth Service")
 
 @app.get("/health")
-def health_check():
-    return {"status": "ok"}
-
+def health():
+    return {"status": "ok", "service": "auth"}
