@@ -1,10 +1,10 @@
 import json
 import requests
-from typing import Any
+from typing import Any, Dict, Optional
+from datetime import datetime
+from common.config import settings
 
-# TODO: Define funciones de ayuda que puedan ser útiles en varios microservicios.
-
-def send_request_to_service(url: str, method: str = "GET", data: Any = None):
+def send_request_to_service(url: str, method: str = "GET", data: Optional[Dict] = None) -> Dict:
     """
     Envía una petición HTTP a otro microservicio.
     
@@ -21,19 +21,19 @@ def send_request_to_service(url: str, method: str = "GET", data: Any = None):
     """
     try:
         response = requests.request(method, url, json=data)
-        response.raise_for_status()  # Lanza una excepción si la respuesta es un error
+        response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"Error en la petición: {e}")
-        raise e
+        print(f"[ERROR] Peticion fallida s {url}: {e}")
+        raise
 
 
-def format_date(dt_object: datetime):
+def format_date(dt_object: datetime) -> str:
     """Formatea un objeto datetime a una cadena de texto."""
     return dt_object.strftime("%Y-%m-%d %H:%M:%S")
 
-# TODO: Agrega más funciones de utilidad según sea necesario.
 
+def build_service_url(service: str, endpoint: str) -> str:
 # ------------------------------------------------------------------------------
 # Ejemplo de uso en un microservicio
 # from common.helpers.utils import send_request_to_service
@@ -49,3 +49,17 @@ def format_date(dt_object: datetime):
 # except requests.exceptions.RequestException:
 #     print("No se pudo obtener la lista de usuarios.")
 #
+    base_url = getattr(settings, f"{service.upper()}_SERVICE_URL", None)
+    if not base_url:
+            raise ValueError(f"El servicio '{service}' no está definido en settings.")
+    return f"{base_url}{endpoint}"
+
+def validate_email(email: str) -> bool:
+    """Valida si una cadena es un correo electrónico válido."""
+    import re
+    pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+    return re.match(pattern, email) is not None
+
+def current_timestamp() -> str:
+    """Devuelve la marca de tiempo actual en formato estandar"""
+    return format_date(datetime.utcnow())

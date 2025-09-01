@@ -7,21 +7,27 @@ from pymongo import MongoClient
 from datetime import datetime, timedelta
 from typing import Optional
 
-SECRET_KEY = "supersecretkey"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-MONGO_URL = "mongodb://auth-db:27017/"
-client = MongoClient(MONGO_URL)
+# Importar configuración común
+from common.config import settings
+
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+
+# Conexión Mongo
+client = MongoClient(settings.AUTH_DB_URL)
 db = client["auth_db"]
 users_collection = db["users"]
 
+
+# Seguridad
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 app = FastAPI(title="Auth Service")
 
-# -----------------------
+# Modelos Pydantic
 class User(BaseModel):
     email: EmailStr
     password: str
@@ -41,7 +47,8 @@ class TokenData(BaseModel):
     email: Optional[str] = None
 
 
-# -----------------------
+
+# Utilidades
 def get_password_hash(password: str):
     return pwd_context.hash(password)
 
@@ -58,8 +65,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 
 def get_user(email: str):
-    user_data = users_collection.find_one({"email": email})
-    return user_data
+    return users_collection.find_one({"email": email})
 
 
 def authenticate_user(email: str, password: str):
@@ -90,7 +96,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
     return user
 
-# -----------------------
+
+# Endpoints
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "auth"}

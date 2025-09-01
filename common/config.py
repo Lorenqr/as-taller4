@@ -1,39 +1,39 @@
 import os
 from dotenv import load_dotenv
 
-# Carga las variables de entorno del archivo .env
-# Esto asegura que las configuraciones se obtengan desde el entorno de ejecución,
-# lo que es una buena práctica para entornos de desarrollo y producción.
 load_dotenv()
 
-# TODO: Define una clase para agrupar las configuraciones.
 class Settings:
-    """Clase para gestionar las configuraciones de la aplicación."""
-    
-    # URLs de los servicios
-    # La URL del API Gateway se obtiene de las variables de entorno.
+    """Clase para gestionar las configuraciones globales del proyecto."""
+
+
+    # Configuración General
+    PROJECT_NAME: str = "Ecommerce Microservices"
+    VERSION: str = "0.1.0"
+
+
+    # API Gateway
     API_GATEWAY_URL: str = os.getenv("API_GATEWAY_URL", "http://localhost:8000")
-    
-    # TODO: Agrega las URLs de los microservicios si son necesarias aquí.
-    # Por ejemplo, para pruebas o scripts de utilidades.
-    # AUTH_SERVICE_URL: str = os.getenv("AUTH_SERVICE_URL", "http://auth-service:8001")
-    # CATALOG_SERVICE_URL: str = os.getenv("CATALOG_SERVICE_URL", "http://catalog-service:8002")
 
-    # TODO: Agrega otras configuraciones globales.
-    # Por ejemplo, una clave secreta para la autenticación o el token JWT.
-    # SECRET_KEY: str = os.getenv("SECRET_KEY", "tu-clave-secreta-muy-segura")
-    # ALGORITHM: str = "HS256"
 
-# Crea una instancia de la clase de configuración.
+    # Microservicios (urls internas en Docker)
+    AUTH_SERVICE_URL: str = os.getenv("AUTH_SERVICE_URL", "http://auth-service:8001")
+    PRODUCTS_SERVICE_URL: str = os.getenv("PRODUCTS_SERVICE_URL", "http://products-service:8002")
+    ORDERS_SERVICE_URL: str = os.getenv("ORDERS_SERVICE_URL", "http://orders-service:8003")
+    PAYMENTS_SERVICE_URL: str = os.getenv("PAYMENTS_SERVICE_URL", "http://payments-service:8004")
+
+
+    # Bases de datos
+    AUTH_DB_URL: str = os.getenv("AUTH_DB_URL", "mongodb://auth-db:27017/")
+    PRODUCTS_DB_URL: str = os.getenv("PRODUCTS_DB_URL", "postgresql://postgres:postgres@products-db:5432/products_db")
+    ORDERS_DB_URL: str = os.getenv("ORDERS_DB_URL", "postgresql://postgres:postgres@orders-db:5432/orders_db")
+    PAYMENTS_DB_URL: str = os.getenv("PAYMENTS_DB_URL", "postgresql://postgres:postgres@payments-db:5432/payments_db")
+
+
+    # JWT (autenticación y seguridad)
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "supersecretkey")
+    ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))
+
+# Instancia global de configuraciones
 settings = Settings()
-
-# --------------------------------------------------------------------------
-# Los estudiantes pueden importar este objeto settings en cualquier parte 
-# de su código para acceder a las configuraciones de manera consistente.
-# 
-# Ejemplo de uso en un microservicio
-# from common.config import settings
-# 
-# Ahora puedes acceder a las variables de configuración
-# api_url = settings.API_GATEWAY_URL
-# 

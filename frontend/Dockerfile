@@ -1,20 +1,31 @@
-FROM python:3.12-slim
+FROM python:3.11-slim
 
-# Establece el directorio de trabajo dentro del contenedor.
 WORKDIR /app
 
-# Copia el archivo de dependencias.
+# Evitar que Python guarde archivos .pyc
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar requirements primero (para aprovechar la cache de Docker)
 COPY requirements.txt .
 
-# Instala las dependencias.
+# Instalar dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia el resto de los archivos de la aplicación (código, templates, estáticos).
+# Copiar el resto del código
 COPY . .
 
-# Exponemos el puerto en el que la aplicación Flask se ejecutará.
+# Exponer el puerto donde corre Flask
 EXPOSE 5000
 
-# Flask se ejecutará en todas las interfaces de red (0.0.0.0) en el puerto 5000.
-CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]
+# Definir variable de entorno para Flask
+ENV FLASK_APP=app.py
+
+# Comando para correr la aplicación
+CMD ["python", "app.py"]
 
