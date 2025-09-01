@@ -1,9 +1,25 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h2>¡Bienvenido al Taller de Microservicios!</h2>
-    <p>Este es el frontend de tu proyecto. Utiliza el API Gateway para interactuar con los microservicios.</p>
+<div class="content">
+    <h2>Productos Artesanales</h2>
+    
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{{ url_for('new_item') }}" class="btn-primary">➕ Agregar Producto</a>
+    </div>
 
-    <a href="{{ url_for('new_item') }}">Crear un nuevo ítem</a>
-
+    {% if items %}
+        <div class="card-grid">
+            {% for item in items %}
+                <div class="card">
+                    <h3>{{ item.name }}</h3>
+                    <p>{{ item.description }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No hay productos disponibles aún.</p>
+    {% endif %}
+</div>
 {% endblock %}
+
