@@ -1,6 +1,6 @@
-  version: '3.8'
+version: '3.8'
 
-  services:
+services:
     frontend:
       build: ./frontend
       container_name: frontend
@@ -45,85 +45,84 @@
     # --- Plantillas de Microservicios ---
     
   # Microservicio de Productos
-  products-service:
-    build: ./services/products
-    container_name: products-service
-    ports:
-      - "8002:8002"
-    environment:
-      - DATABASE_URL=postgresql://user:password@products-db:5432/products_db
-    depends_on:
-      - products-db
+    products-service:
+      build: ./services/products
+      container_name: products-service
+      ports:
+        - "8002:8002"
+      environment:
+        - DATABASE_URL=postgresql://user:password@products-db:5432/products_db
+      depends_on:
+        - products-db
 
   # Base de datos para el servicio de productos
-  products-db:
-    image: postgres:latest
-    container_name: products-db
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=products_db
-    ports:
-      - "5433:5432"
-    volumes:
-      - products_data:/var/lib/postgresql/data
+    products-db:
+      image: postgres:latest
+      container_name: products-db
+      environment:
+        - POSTGRES_USER=user
+        - POSTGRES_PASSWORD=password
+        - POSTGRES_DB=products_db
+      ports:
+        - "5433:5432"
+      volumes:
+        - products_data:/var/lib/postgresql/data
 
   # ---------------------------
   # Microservicio de Pedidos
-  orders-service:
-    build: ./services/orders
-    container_name: orders-service
-    ports:
-      - "8003:8003"
-    environment:
-      - DATABASE_URL=postgresql://user:password@orders-db:5432/orders_db
-    depends_on:
-      - orders-db
+    orders-service:
+      build: ./services/orders
+      container_name: orders-service
+      ports:
+        - "8003:8003"
+      environment:
+        - DATABASE_URL=postgresql://user:password@orders-db:5432/orders_db
+      depends_on:
+        - orders-db
 
   # Base de datos para el servicio de pedidos
-  orders-db:
-    image: postgres:latest
-    container_name: orders-db
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=orders_db
-    ports:
-      - "5434:5432"
-    volumes:
-      - orders_data:/var/lib/postgresql/data
+    orders-db:
+      image: postgres:latest
+      container_name: orders-db
+      environment:
+        - POSTGRES_USER=user
+        - POSTGRES_PASSWORD=password
+        - POSTGRES_DB=orders_db
+      ports:
+        - "5434:5432"
+      volumes:
+        - orders_data:/var/lib/postgresql/data
 
   # ---------------------------
   # Microservicio de Pagos
-  payments-service:
-    build: ./services/payments
-    container_name: payments-service
-    ports:
-      - "8004:8004"
-    environment:
-      - DATABASE_URL=postgresql://user:password@payments-db:5432/payments_db
-    depends_on:
-      - payments-db
+    payments-service:
+      build: ./services/payments
+      container_name: payments-service
+      ports:
+        - "8004:8004"
+      environment:
+        - DATABASE_URL=postgresql://user:password@payments-db:5432/payments_db
+      depends_on:
+        - payments-db
 
   # Base de datos para el servicio de pagos
-  payments-db:
-    image: postgres:latest
-    container_name: payments-db
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=payments_db
-    ports:
-      - "5435:5432"
-    volumes:
-      - payments_data:/var/lib/postgresql/data
+    payments-db:
+      image: postgres:latest
+      container_name: payments-db
+      environment:
+        - POSTGRES_USER=user
+        - POSTGRES_PASSWORD=password
+        - POSTGRES_DB=payments_db
+      ports:
+        - "5435:5432"
+      volumes:
+        - payments_data:/var/lib/postgresql/data
 
 
-  volumes:
-  auth_data:
-  products_data:
-  orders_data:
-  payments_data:
-  
-  # agregar volúmenes para los otros 2 microservicios
+volumes:
+    auth_data:
+    products_data:
+    orders_data:
+    payments_data:
+
 
