@@ -1,5 +1,3 @@
 fastapi
 uvicorn
-pydantic
-motor        # para MongoDB (auth)
-psycopg2-binary  # para Postgres (products, orders, payments)
+psycopg2-binary

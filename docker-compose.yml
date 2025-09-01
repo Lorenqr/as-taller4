@@ -27,7 +27,7 @@ services:
       build: ./services/authentication
       container_name: auth-service
       ports:
-        - "8001:8001"
+        - "8001:8000"
       environment:
         - DATABASE_URL=mongodb://auth-db:27017/auth_db
       depends_on:

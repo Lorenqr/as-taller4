@@ -1,5 +1,8 @@
 fastapi
 uvicorn
 pydantic
-motor        # para MongoDB (auth)
-psycopg2-binary  # para Postgres (products, orders, payments)
+email-validator
+pymongo
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
