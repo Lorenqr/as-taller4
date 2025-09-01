@@ -140,13 +140,13 @@ footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-}
+    }
 
 .logo {
     display: flex;
     align-items: center;
     gap: 0.8rem;
-}
+    }
 
 .logo img {
     height: 40px;
@@ -154,12 +154,13 @@ footer {
     border-radius: 50%;
     box-shadow: var(--shadow);
     object-fit: cover;
-}
+    }
 
 .site-title {
     font-size: 1.2rem;
     font-weight: bold;
     color: var(--text-light);
-}
+    }
+
 
 

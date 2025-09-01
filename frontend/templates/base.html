@@ -9,19 +9,17 @@
 <body>
     <header>
         <div class="navbar">
-            <!-- Logo / Banner -->
             <div class="logo">
-                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" />
-                <span class="site-title">ArteSano</span>
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" />
+            <span class="site-title">Marketplace Artesanal</span>
             </div>
-
-            <!-- Navegación -->
             <nav>
-                <a href="{{ url_for('index') }}">Inicio</a>
-                <a href="{{ url_for('new_item') }}">Nuevo Ítem</a>
+            <a href="{{ url_for('index') }}">Inicio</a>
+            <a href="{{ url_for('new_item') }}">Nuevo Ítem</a>
             </nav>
         </div>
     </header>
+
 
     <main>
         {% block content %}{% endblock %}

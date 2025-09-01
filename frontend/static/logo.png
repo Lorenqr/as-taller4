@@ -1,0 +1,8 @@
+import requests
+
+url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIhBBdCjEc6e1ph2cCNjwJ_f4y3ZppXl59yOjUPeHSbGwZnV3TynDvZAghW-KREGi6Hkc&usqp=CAU"
+resp = requests.get(url)
+resp.raise_for_status()
+
+with open("frontend/static/logo.png", "wb") as f:
+    f.write(resp.content)
