@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Evitar archivos .pyc
+
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
@@ -11,17 +11,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar requirements primero
 COPY requirements.txt .
 
-# Instalar dependencias
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar código
 COPY . .
 
-# Exponer puerto del Auth Service
+COPY ../common ./common
+
 EXPOSE 8001
 
-# Comando para arrancar
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]

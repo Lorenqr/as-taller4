@@ -2,43 +2,41 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }} - ArteSano</title>
+    <title>{{ title or "ArteSano" }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    {% block head %}{% endblock %}
 </head>
 <body>
     <header>
-        <div class="navbar">
-            <div class="logo">
-                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" />
-                <span class="site-title">Marketplace Artesanal</span>
-            </div>
-            <nav>
-                <a href="{{ url_for('index') }}">Inicio</a>
-                <a href="{{ url_for('new_item') }}">Nuevo Ítem</a>
-                <!-- Menú futuro para autenticación -->
-                {% if session.get('user') %}
-                    <span class="user-info">Hola, {{ session['user']['email'] }}</span>
-                    <a href="{{ url_for('logout') }}">Cerrar sesión</a>
-                {% else %}
-                    <a href="{{ url_for('login') }}">Iniciar sesión</a>
-                {% endif %}
-            </nav>
-        </div>
+        <h1><a href="{{ url_for('index') }}">ArteSano</a></h1>
+        <nav>
+            <a href="{{ url_for('index') }}">Inicio</a>
+            <a href="{{ url_for('new_item') }}">Agregar Producto</a>
+
+            {% if session.get("token") %}
+                <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Iniciar sesión</a>
+                <a href="{{ url_for('register') }}">Registrarse</a>
+            {% endif %}
+        </nav>
     </header>
 
     <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
     </main>
-
-    <footer>
-        <p>&copy; 2025 Productos Artesanales</p>
-    </footer>
-
-    {% block scripts %}{% endblock %}
 </body>
 </html>
+
 
 
 
