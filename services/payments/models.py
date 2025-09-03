@@ -1,52 +1,41 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
 from sqlalchemy.orm import declarative_base
 from datetime import datetime
 
 from pydantic import BaseModel
 from typing import Optional
 
-# Define la base declarativa
 Base = declarative_base()
 
-# TODO: Crea tus modelos de datos aquí.
-# Cada clase de modelo representa una tabla en tu base de datos.
-# Debes renombrar YourModel por el nombre de la Clase según el servicio
-class YourModel(Base):
-    """
-    Plantilla de modelo de datos para un recurso.
-    Ajusta esta clase según los requisitos de tu tema.
-    """
-    __tablename__ = "[nombre_de_tu_tabla]"
+# Modelo SQLAlchemy (tabla en DB)
+class Payment(Base):
+    __tablename__ = "payments"
 
-    # Columnas de la tabla
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    description = Column(String)
+    order_id = Column(Integer, index=True)  # ID de la orden asociada
+    amount = Column(Float, nullable=False)  # Monto del pago
+    status = Column(String, default="pending")  # pending, completed, failed
+    method = Column(String, default="card")  # card, paypal, etc.
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # TODO: Agrega más columnas según sea necesario.
-    # Por ejemplo:
-    # is_active = Column(Boolean, default=True)
-    # foreign_key_id = Column(Integer, ForeignKey("otra_tabla.id"))
-
     def __repr__(self):
-        return f"<YourModel(id={self.id}, name='{self.name}')>"
+        return f"<Payment(id={self.id}, order_id={self.order_id}, status='{self.status}')>"
 
-# TODO: Define los modelos Pydantic para la validación de datos.
-# Estos modelos se usarán en los endpoints de FastAPI para validar la entrada y salida.
+# -------- Pydantic Schemas --------
+class PaymentBase(BaseModel):
+    order_id: int
+    amount: float
+    method: str
 
-class YourModelBase(BaseModel):
-    name: str
-    description: Optional[str] = None
-    # TODO: Agrega los campos que se necesitan para crear o actualizar un recurso.
-
-class YourModelCreate(YourModelBase):
+class PaymentCreate(PaymentBase):
     pass
 
-class YourModelRead(YourModelBase):
+class PaymentRead(PaymentBase):
     id: int
+    status: str
     created_at: datetime
-    
+
     class Config:
-        orm_mode = True # Habilita la compatibilidad con ORM
+        orm_mode = True
+
 

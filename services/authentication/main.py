@@ -1,13 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, constr
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-from pymongo import MongoClient
+from pymongo import MongoClient, errors
 from datetime import datetime, timedelta
 from typing import Optional
 
-# Configuración común (variables de entorno centralizadas)
+# Configuración común
 from common.config import settings
 
 SECRET_KEY = settings.SECRET_KEY
@@ -19,6 +19,12 @@ client = MongoClient(settings.AUTH_DB_URL)
 db = client["auth_db"]
 users_collection = db["users"]
 
+# Crear índice único para email
+try:
+    users_collection.create_index("email", unique=True)
+except errors.PyMongoError as e:
+    print(f"[WARN] No se pudo crear índice único en 'users': {e}")
+
 # Seguridad
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -28,8 +34,8 @@ app = FastAPI(title="Auth Service", version="1.0.0")
 # ----------- Modelos -----------
 class User(BaseModel):
     email: EmailStr
-    password: str
-    role: str = "cliente"   # cliente o vendedor
+    password: constr(min_length=6)
+    role: str = "cliente"
 
 
 class UserOut(BaseModel):
@@ -48,6 +54,9 @@ class TokenData(BaseModel):
 
 
 # ----------- Utilidades -----------
+VALID_ROLES = {"cliente", "vendedor", "admin"}
+
+
 def get_password_hash(password: str):
     return pwd_context.hash(password)
 
@@ -105,9 +114,8 @@ def health():
 
 @app.post("/register", response_model=UserOut, status_code=201)
 def register(user: User):
-    existing_user = users_collection.find_one({"email": user.email})
-    if existing_user:
-        raise HTTPException(status_code=400, detail="El usuario ya existe")
+    if user.role not in VALID_ROLES:
+        raise HTTPException(status_code=400, detail="Rol inválido")
 
     hashed_password = get_password_hash(user.password)
     user_dict = {
@@ -115,7 +123,11 @@ def register(user: User):
         "hashed_password": hashed_password,
         "role": user.role,
     }
-    users_collection.insert_one(user_dict)
+
+    try:
+        users_collection.insert_one(user_dict)
+    except errors.DuplicateKeyError:
+        raise HTTPException(status_code=400, detail="El usuario ya existe")
 
     return {"email": user.email, "role": user.role}
 

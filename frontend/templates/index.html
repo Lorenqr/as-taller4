@@ -14,6 +14,12 @@
                 <div class="card">
                     <h3>{{ item.name }}</h3>
                     <p>{{ item.description }}</p>
+                    {% if item.get("price") %}
+                        <p><strong>Precio:</strong> ${{ item.price }}</p>
+                    {% endif %}
+                    {% if item.get("author") %}
+                        <p class="meta">Vendido por: {{ item.author }}</p>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>

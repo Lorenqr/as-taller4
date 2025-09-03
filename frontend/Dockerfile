@@ -1,31 +1,33 @@
+# Imagen base
 FROM python:3.11-slim
 
+# Directorio de trabajo
 WORKDIR /app
 
-# Evitar que Python guarde archivos .pyc
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+# Evitar pyc y usar stdout para logs
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-# Instalar dependencias del sistema
+# Instalar dependencias del sistema mínimas
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar requirements primero (para aprovechar la cache de Docker)
+# Copiar requirements e instalar dependencias
 COPY requirements.txt .
-
-# Instalar dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar el resto del código
 COPY . .
 
-# Exponer el puerto donde corre Flask
+# Exponer puerto del frontend
 EXPOSE 5000
 
-# Definir variable de entorno para Flask
-ENV FLASK_APP=app.py
+# Variables de entorno Flask
+ENV FLASK_APP=app.py \
+    FLASK_RUN_HOST=0.0.0.0 \
+    FLASK_RUN_PORT=5000
 
-# Comando para correr la aplicación
-CMD ["python", "app.py"]
+# Comando para correr la app
+CMD ["flask", "run"]
 
