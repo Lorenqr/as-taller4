@@ -5,21 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }} - ArteSano</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block head %}{% endblock %}
 </head>
 <body>
     <header>
         <div class="navbar">
             <div class="logo">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" />
-            <span class="site-title">Marketplace Artesanal</span>
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" />
+                <span class="site-title">Marketplace Artesanal</span>
             </div>
             <nav>
-            <a href="{{ url_for('index') }}">Inicio</a>
-            <a href="{{ url_for('new_item') }}">Nuevo Ítem</a>
+                <a href="{{ url_for('index') }}">Inicio</a>
+                <a href="{{ url_for('new_item') }}">Nuevo Ítem</a>
+                <!-- Menú futuro para autenticación -->
+                {% if session.get('user') %}
+                    <span class="user-info">Hola, {{ session['user']['email'] }}</span>
+                    <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}">Iniciar sesión</a>
+                {% endif %}
             </nav>
         </div>
     </header>
-
 
     <main>
         {% block content %}{% endblock %}
@@ -28,6 +35,10 @@
     <footer>
         <p>&copy; 2025 Productos Artesanales</p>
     </footer>
+
+    {% block scripts %}{% endblock %}
 </body>
 </html>
+
+
 

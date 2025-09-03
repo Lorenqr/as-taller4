@@ -7,53 +7,52 @@ from pymongo import MongoClient
 from datetime import datetime, timedelta
 from typing import Optional
 
-
-# Importar configuración común
+# Configuración común (variables de entorno centralizadas)
 from common.config import settings
 
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
-# Conexión Mongo
+# Conexión MongoDB
 client = MongoClient(settings.AUTH_DB_URL)
 db = client["auth_db"]
 users_collection = db["users"]
-
 
 # Seguridad
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-app = FastAPI(title="Auth Service")
+app = FastAPI(title="Auth Service", version="1.0.0")
 
-# Modelos Pydantic
+# ----------- Modelos -----------
 class User(BaseModel):
     email: EmailStr
     password: str
-    role: str = "customer"
+    role: str = "cliente"   # cliente o vendedor
 
 
-class UserInDB(User):
-    hashed_password: str
+class UserOut(BaseModel):
+    email: EmailStr
+    role: str
 
 
 class Token(BaseModel):
     access_token: str
-    token_type: str
+    token_type: str = "bearer"
 
 
 class TokenData(BaseModel):
     email: Optional[str] = None
+    role: Optional[str] = None
 
 
-
-# Utilidades
+# ----------- Utilidades -----------
 def get_password_hash(password: str):
     return pwd_context.hash(password)
 
 
-def verify_password(plain_password, hashed_password):
+def verify_password(plain_password: str, hashed_password: str):
     return pwd_context.verify(plain_password, hashed_password)
 
 
@@ -86,6 +85,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
+        role: str = payload.get("role")
         if email is None:
             raise credentials_exception
     except JWTError:
@@ -94,16 +94,16 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     user = get_user(email)
     if user is None:
         raise credentials_exception
-    return user
+    return {"email": user["email"], "role": role or user.get("role")}
 
 
-# Endpoints
+# ----------- Endpoints -----------
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "auth"}
 
 
-@app.post("/register", response_model=User)
+@app.post("/register", response_model=UserOut, status_code=201)
 def register(user: User):
     existing_user = users_collection.find_one({"email": user.email})
     if existing_user:
@@ -117,7 +117,7 @@ def register(user: User):
     }
     users_collection.insert_one(user_dict)
 
-    return user
+    return {"email": user.email, "role": user.role}
 
 
 @app.post("/login", response_model=Token)
@@ -126,13 +126,12 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     if not user:
         raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
 
-    access_token = create_access_token(data={"sub": user["email"]})
+    access_token = create_access_token(
+        data={"sub": user["email"], "role": user["role"]}
+    )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.get("/users/me")
+@app.get("/users/me", response_model=UserOut)
 async def read_users_me(current_user: dict = Depends(get_current_user)):
-    return {
-        "email": current_user["email"],
-        "role": current_user["role"]
-    }
+    return {"email": current_user["email"], "role": current_user["role"]}
