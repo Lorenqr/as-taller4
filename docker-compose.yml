@@ -10,7 +10,9 @@ services:
       - api-gateway
 
   api-gateway:
-    build: ./api-gateway
+    build: 
+      context: .
+      dockerfile: ./services/api-gateway/Dockerfile
     container_name: api-gateway
     ports:
       - "8000:8000"
@@ -27,7 +29,9 @@ services:
 
   # Autenticación
   auth-service:
-    build: ./services/authentication
+    build:
+      context: .
+      dockerfile: ./services/authentication/Dockerfile
     container_name: auth-service
     ports:
       - "8001:8000"
@@ -39,6 +43,7 @@ services:
     depends_on:
       - auth-db
 
+
   auth-db:
     image: mongo:6
     container_name: auth-db
@@ -49,7 +54,9 @@ services:
 
   # Productos
   products-service:
-    build: ./services/products
+    build:
+      context: .
+      dockerfile: ./services/products/Dockerfile
     container_name: products-service
     ports:
       - "8002:8000"
@@ -72,7 +79,9 @@ services:
 
   # Pedidos
   orders-service:
-    build: ./services/orders
+    build: 
+      context: .
+      dockerfile: ./services/orders/Dockerfile
     container_name: orders-service
     ports:
       - "8003:8000"
@@ -95,7 +104,9 @@ services:
 
   # Pagos
   payments-service:
-    build: ./services/payments
+    build: 
+      context: .
+      dockerfile: ./services/payments/Dockerfile
     container_name: payments-service
     ports:
       - "8004:8000"

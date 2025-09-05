@@ -1,60 +1,81 @@
-from fastapi import FastAPI, APIRouter, Request, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+import os
+from fastapi import FastAPI, Request, HTTPException
 import httpx
 
-# Configuración centralizada
-from common.config import settings
+# Configuración desde variables de entorno
+AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://auth-service:8000")
+PRODUCTS_SERVICE_URL = os.getenv("PRODUCTS_SERVICE_URL", "http://products-service:8000")
+ORDERS_SERVICE_URL = os.getenv("ORDERS_SERVICE_URL", "http://orders-service:8000")
+PAYMENTS_SERVICE_URL = os.getenv("PAYMENTS_SERVICE_URL", "http://payments-service:8000")
 
-# Inicialización de la app
-app = FastAPI(title="API Gateway Taller Microservicios")
+app = FastAPI(title="API Gateway", version="1.0.0")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
-router = APIRouter(prefix="/api/v1")
-
-# Definición de microservicios
-SERVICES = {
-    "auth": settings.AUTH_SERVICE_URL,
-    "products": settings.PRODUCTS_SERVICE_URL,
-    "orders": settings.ORDERS_SERVICE_URL,
-    "payments": settings.PAYMENTS_SERVICE_URL,
-}
-
-async def forward_request(method: str, service_name: str, path: str, request: Request):
-    if service_name not in SERVICES:
-        raise HTTPException(status_code=404, detail=f"Service '{service_name}' not found.")
-
-    url = f"{SERVICES[service_name]}/{path}"
-    headers = dict(request.headers)
-
+# ---------- UTILIDAD PARA REENVIAR ----------
+async def forward_request(method: str, url: str, request: Request):
     try:
-        async with httpx.AsyncClient(timeout=20.0) as client:
-            if method in ["POST", "PUT", "PATCH"]:
-                body = await request.json()
-                resp = await client.request(method, url, headers=headers, json=body, params=request.query_params)
-            else:
-                resp = await client.request(method, url, headers=headers, params=request.query_params)
+        async with httpx.AsyncClient() as client:
+            body = await request.body()
+            headers = dict(request.headers)
 
-        return resp.json()
-    except httpx.ConnectError:
-        raise HTTPException(status_code=502, detail=f"Service '{service_name}' is unavailable.")
+            resp = await client.request(
+                method,
+                url,
+                content=body,
+                headers=headers,
+                params=request.query_params
+            )
+
+            return resp.json()
     except httpx.RequestError as e:
-        raise HTTPException(status_code=500, detail=f"Error forwarding request to {service_name}: {e}")
+        raise HTTPException(status_code=502, detail=f"Error conectando al servicio: {str(e)}")
 
-# Rutas genéricas
-@router.api_route("/{service_name}/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
-async def proxy(service_name: str, path: str, request: Request):
-    return await forward_request(request.method, service_name, path, request)
 
-# Incluir router
-app.include_router(router)
-
+# ---------- HEALTH ----------
 @app.get("/health")
-def health_check():
-    return {"status": "ok", "message": "API Gateway is running."}
+def health():
+    return {"status": "ok", "service": "api-gateway"}
+
+
+# ---------- AUTH ----------
+@app.post("/auth/register")
+async def register(request: Request):
+    return await forward_request("POST", f"{AUTH_SERVICE_URL}/register", request)
+
+@app.post("/auth/login")
+async def login(request: Request):
+    return await forward_request("POST", f"{AUTH_SERVICE_URL}/login", request)
+
+@app.get("/auth/me")
+async def me(request: Request):
+    return await forward_request("GET", f"{AUTH_SERVICE_URL}/users/me", request)
+
+
+# ---------- PRODUCTS ----------
+@app.get("/products")
+async def get_products(request: Request):
+    return await forward_request("GET", f"{PRODUCTS_SERVICE_URL}/products", request)
+
+@app.post("/products")
+async def create_product(request: Request):
+    return await forward_request("POST", f"{PRODUCTS_SERVICE_URL}/products", request)
+
+
+# ---------- ORDERS ----------
+@app.get("/orders")
+async def get_orders(request: Request):
+    return await forward_request("GET", f"{ORDERS_SERVICE_URL}/orders", request)
+
+@app.post("/orders")
+async def create_order(request: Request):
+    return await forward_request("POST", f"{ORDERS_SERVICE_URL}/orders", request)
+
+
+# ---------- PAYMENTS ----------
+@app.get("/payments")
+async def get_payments(request: Request):
+    return await forward_request("GET", f"{PAYMENTS_SERVICE_URL}/payments", request)
+
+@app.post("/payments")
+async def create_payment(request: Request):
+    return await forward_request("POST", f"{PAYMENTS_SERVICE_URL}/payments", request)
