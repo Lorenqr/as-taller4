@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Productos disponibles</h2>
+<div class="card-grid">
+    {% for product in products %}
+    <div class="card">
+        <img src="{{ product.image or url_for('static', path='logo.png') }}" alt="producto" style="width:100%; border-radius:8px; margin-bottom:10px;">
+        <h3>{{ product.name }}</h3>
+        <p>{{ product.description }}</p>
+        <p><strong>${{ product.price }}</strong></p>
+        <button class="btn-primary">Comprar</button>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

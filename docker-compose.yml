@@ -1,16 +1,18 @@
 services:
   frontend:
-    build: ./frontend
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
     container_name: frontend
     ports:
-      - "5000:5000"
+      - "8080:8080"
     environment:
       - API_GATEWAY_URL=http://api-gateway:8000
     depends_on:
       - api-gateway
 
   api-gateway:
-    build: 
+    build:
       context: .
       dockerfile: ./services/api-gateway/Dockerfile
     container_name: api-gateway

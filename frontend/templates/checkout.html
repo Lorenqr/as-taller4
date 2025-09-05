@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Checkout</h2>
+
+{% if cart %}
+<ul>
+    {% for item in cart %}
+    <li>{{ item.name }} - ${{ item.price }}</li>
+    {% endfor %}
+</ul>
+
+<p><strong>Total a pagar: ${{ total }}</strong></p>
+
+<form method="post" action="/checkout">
+    <button type="submit" class="btn-primary">Confirmar compra y pagar</button>
+</form>
+{% else %}
+<p>Tu carrito está vacío.</p>
+{% endif %}
+
+{% endblock %}

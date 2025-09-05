@@ -1,123 +1,127 @@
-# /frontend/app.py
-
-from flask import Flask, render_template, request, redirect, url_for, flash, session
-import requests
+from fastapi import FastAPI, Request, Form, status
+from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+import httpx
 import os
 
-app = Flask(__name__)
-app.secret_key = "supersecretkey"
+API_GATEWAY_URL = os.getenv("API_GATEWAY_URL", "http://api-gateway:8000")
 
-# URL del API Gateway
-API_GATEWAY_URL = os.getenv("API_GATEWAY_URL", "http://localhost:8000/api/v1")
+app = FastAPI(title="Frontend - E-commerce Artesanal")
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
-fallback_items = [
-    {"name": "Collar artesanal", "description": "Collar hecho a mano con piedras naturales."},
-    {"name": "Bolso de cuero", "description": "Bolso artesanal de cuero genuino con detalles únicos."},
-    {"name": "Taza pintada a mano", "description": "Taza de cerámica decorada con pintura artesanal."},
-]
+# Simulación de sesión en memoria
+session = {"token": None, "email": None, "role": None, "cart": []}
 
 
-# Rutas principales
-
-@app.route("/")
-def index():
-    try:
-        response = requests.get(f"{API_GATEWAY_URL}/products/items", timeout=5)
-        items = response.json() if response.status_code == 200 else fallback_items
-    except requests.exceptions.RequestException:
-        items = fallback_items
-    return render_template("index.html", title="ArteSano", items=items)
+@app.get("/", response_class=HTMLResponse)
+def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request, "session": session})
 
 
-@app.route("/form", methods=["GET", "POST"])
-def new_item():
-    # Requiere login
-    if "token" not in session:
-        flash("Debes iniciar sesión primero 🔒", "warning")
-        return redirect(url_for("login"))
-
-    if request.method == "POST":
-        name = request.form.get("name")
-        description = request.form.get("description")
-
-        if name:
-            try:
-            
-                headers = {"Authorization": f"Bearer {session['token']}"}
-                requests.post(
-                    f"{API_GATEWAY_URL}/products/items",
-                    json={"name": name, "description": description},
-                    headers=headers,
-                    timeout=5
-                )
-            except requests.exceptions.RequestException:
-                fallback_items.append({"name": name, "description": description})
-
-        return redirect(url_for("index"))
-
-    return render_template("form.html", title="Agregar Producto")
+# ========== AUTENTICACIÓN ==========
+@app.get("/login", response_class=HTMLResponse)
+def login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
 
 
-# Autenticación
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-
+@app.post("/login")
+async def login(email: str = Form(...), password: str = Form(...)):
+    async with httpx.AsyncClient() as client:
         try:
-            response = requests.post(
+            resp = await client.post(
                 f"{API_GATEWAY_URL}/auth/login",
-                data={"username": email, "password": password},
-                timeout=5
+                data={"username": email, "password": password}
             )
+            resp.raise_for_status()
+        except httpx.HTTPStatusError:
+            return RedirectResponse("/login?error=1", status_code=status.HTTP_302_FOUND)
 
-            if response.status_code == 200:
-                token = response.json().get("access_token")
-                session["token"] = token
-                flash("Inicio de sesión exitoso ✅", "success")
-                return redirect(url_for("index"))
-            else:
-                flash("Credenciales inválidas ❌", "danger")
+        data = resp.json()
+        session["token"] = data["access_token"]
+        session["email"] = email
 
-        except requests.exceptions.RequestException:
-            flash("Error al conectar con el servidor de autenticación ⚠️", "danger")
-
-    return render_template("login.html", title="Iniciar Sesión")
+    return RedirectResponse("/", status_code=status.HTTP_302_FOUND)
 
 
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-        role = request.form.get("role", "user")
+@app.get("/register", response_class=HTMLResponse)
+def register_page(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
 
+
+@app.post("/register")
+async def register(email: str = Form(...), password: str = Form(...), role: str = Form("cliente")):
+    async with httpx.AsyncClient() as client:
         try:
-            response = requests.post(
+            resp = await client.post(
                 f"{API_GATEWAY_URL}/auth/register",
-                json={"email": email, "password": password, "role": role},
-                timeout=5
+                json={"email": email, "password": password, "role": role}
             )
-            if response.status_code == 201:
-                flash("Registro exitoso 🎉, ahora inicia sesión", "success")
-                return redirect(url_for("login"))
-            else:
-                flash("Error al registrarse ❌", "danger")
-        except requests.exceptions.RequestException:
-            flash("Servicio de autenticación no disponible ⚠️", "danger")
+            resp.raise_for_status()
+        except httpx.HTTPStatusError:
+            return RedirectResponse("/register?error=1", status_code=status.HTTP_302_FOUND)
 
-    return render_template("register.html", title="Registrarse")
+    return RedirectResponse("/login", status_code=status.HTTP_302_FOUND)
 
 
-@app.route("/logout")
+@app.get("/logout")
 def logout():
-    session.pop("token", None)
-    flash("Sesión cerrada 👋", "info")
-    return redirect(url_for("index"))
+    session.clear()
+    return RedirectResponse("/", status_code=status.HTTP_302_FOUND)
 
 
-# Main
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+# ========== PRODUCTOS ==========
+@app.get("/products", response_class=HTMLResponse)
+async def products(request: Request):
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(f"{API_GATEWAY_URL}/products")
+        products = resp.json()
+
+    return templates.TemplateResponse("products.html", {"request": request, "products": products, "session": session})
+
+
+@app.post("/add-to-cart")
+async def add_to_cart(product_id: str = Form(...), name: str = Form(...), price: float = Form(...)):
+    session["cart"].append({"id": product_id, "name": name, "price": price})
+    return RedirectResponse("/cart", status_code=status.HTTP_302_FOUND)
+
+
+# ========== CARRITO ==========
+@app.get("/cart", response_class=HTMLResponse)
+def view_cart(request: Request):
+    total = sum(item["price"] for item in session["cart"])
+    return templates.TemplateResponse("cart.html", {"request": request, "cart": session["cart"], "total": total, "session": session})
+
+
+# ========== CHECKOUT / PEDIDOS ==========
+@app.get("/checkout", response_class=HTMLResponse)
+def checkout_page(request: Request):
+    total = sum(item["price"] for item in session["cart"])
+    return templates.TemplateResponse("checkout.html", {"request": request, "cart": session["cart"], "total": total, "session": session})
+
+
+@app.post("/checkout")
+async def checkout():
+    if not session.get("token"):
+        return RedirectResponse("/login", status_code=status.HTTP_302_FOUND)
+
+    order_data = {
+        "user": session["email"],
+        "items": session["cart"],
+        "total": sum(item["price"] for item in session["cart"])
+    }
+
+    async with httpx.AsyncClient() as client:
+        # Crear pedido
+        await client.post(f"{API_GATEWAY_URL}/orders", json=order_data)
+
+        # Procesar pago
+        await client.post(f"{API_GATEWAY_URL}/payments", json={
+            "user": session["email"],
+            "amount": order_data["total"]
+        })
+
+    session["cart"].clear()
+    return RedirectResponse("/", status_code=status.HTTP_302_FOUND)

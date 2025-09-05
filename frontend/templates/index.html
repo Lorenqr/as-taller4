@@ -1,31 +1,11 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="content">
-    <h2>Productos Artesanales</h2>
-    
-    <div style="margin-bottom: 1.5rem;">
-        <a href="{{ url_for('new_item') }}" class="btn-primary">➕ Agregar Producto</a>
-    </div>
-
-    {% if items %}
-        <div class="card-grid">
-            {% for item in items %}
-                <div class="card">
-                    <h3>{{ item.name }}</h3>
-                    <p>{{ item.description }}</p>
-                    {% if item.get("price") %}
-                        <p><strong>Precio:</strong> ${{ item.price }}</p>
-                    {% endif %}
-                    {% if item.get("author") %}
-                        <p class="meta">Vendido por: {{ item.author }}</p>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p>No hay productos disponibles aún.</p>
-    {% endif %}
-</div>
+<section class="text-center">
+    <h1>Bienvenido a E-commerce Artesanal</h1>
+    <p class="meta">Compra directo de artesanos locales y apoya la economía regional.</p>
+    <a href="/products" class="btn-primary">Ver productos</a>
+</section>
 {% endblock %}
+
+
 
