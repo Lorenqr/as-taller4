@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 import httpx
 import os
 
-API_GATEWAY_URL = os.getenv("API_GATEWAY_URL", "http://api-gateway:8000")
+API_GATEWAY_URL = os.getenv ("API_GATEWAY_URL=http://api-gateway:8000")
 
 app = FastAPI(title="Frontend - E-commerce Artesanal")
 

@@ -11,10 +11,10 @@ class Settings(BaseSettings):
     API_GATEWAY_URL: str = "http://localhost:8000"
 
     # Microservicios (urls internas en Docker)
-    AUTH_SERVICE_URL: str = "http://authentication:8001"
-    PRODUCTS_SERVICE_URL: str = "http://products:8002"
-    ORDERS_SERVICE_URL: str = "http://orders:8003"
-    PAYMENTS_SERVICE_URL: str = "http://payments:8004"
+    AUTH_SERVICE_URL: str = "http://auth-service:8000"
+    PRODUCTS_SERVICE_URL: str = "http://products-service:8000"
+    ORDERS_SERVICE_URL: str = "http://orders-service:8000"
+    PAYMENTS_SERVICE_URL: str = "http://payments-service:8000"
 
     # Bases de datos
     AUTH_DB_URL: str = "mongodb://auth-mongo:27017/"

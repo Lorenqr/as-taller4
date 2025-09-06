@@ -14,7 +14,7 @@ services:
   api-gateway:
     build:
       context: .
-      dockerfile: ./services/api-gateway/Dockerfile
+      dockerfile: ./api-gateway/Dockerfile
     container_name: api-gateway
     ports:
       - "8000:8000"
@@ -44,7 +44,6 @@ services:
       - ACCESS_TOKEN_EXPIRE_MINUTES=60
     depends_on:
       - auth-db
-
 
   auth-db:
     image: mongo:6
@@ -81,7 +80,7 @@ services:
 
   # Pedidos
   orders-service:
-    build: 
+    build:
       context: .
       dockerfile: ./services/orders/Dockerfile
     container_name: orders-service
@@ -106,7 +105,7 @@ services:
 
   # Pagos
   payments-service:
-    build: 
+    build:
       context: .
       dockerfile: ./services/payments/Dockerfile
     container_name: payments-service
@@ -134,5 +133,3 @@ volumes:
   products_data:
   orders_data:
   payments_data:
-
-
