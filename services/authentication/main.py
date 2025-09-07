@@ -7,6 +7,7 @@ from pymongo import MongoClient, errors
 from datetime import datetime, timedelta
 from typing import Optional
 
+
 # Configuración común
 from common.config import settings
 
@@ -31,10 +32,11 @@ class User(BaseModel):
 class UserInDB(User):
     hashed_password: str
 
-class UserCreate(BaseModel):
+class UserRegister(BaseModel):
     email: EmailStr
-    password: constr(min_length=6)
-    full_name: Optional[str] = None
+    password: str
+    full_name: str
+    role: str
 
 class Token(BaseModel):
     access_token: str
@@ -75,7 +77,7 @@ def health():
     return {"status": "ok", "service": "auth-service"}
 
 @app.post("/register", response_model=User)
-def register(user: UserCreate):
+def register(user: UserRegister):
     if db.users.find_one({"email": user.email}):
         raise HTTPException(status_code=400, detail="Email ya registrado")
     hashed_password = get_password_hash(user.password)

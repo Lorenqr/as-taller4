@@ -23,6 +23,10 @@ def index(request: Request):
 def login_get(request: Request):
     return templates.TemplateResponse("login.html", {"request": request, "session": request.session})
 
+@app.get("/cart", response_class=HTMLResponse)
+def cart(request: Request):
+    return templates.TemplateResponse("cart.html", {"request": request})
+
 @app.post("/login")
 def login_post(request: Request, email: str = Form(...), password: str = Form(...)):
     try:
