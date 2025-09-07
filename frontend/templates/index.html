@@ -1,11 +1,33 @@
 {% extends "base.html" %}
+
 {% block content %}
 <section class="text-center">
     <h1>Bienvenido a E-commerce Artesanal</h1>
     <p class="meta">Compra directo de artesanos locales y apoya la economía regional.</p>
+
     <a href="/products" class="btn-primary">Ver productos</a>
 </section>
+
+<hr>
+
+<section>
+    <h2>Productos disponibles</h2>
+
+    {% if products %}
+        <div class="products-grid">
+            {% for p in products %}
+            
+                <div class="product-card">
+                    <h3>{{ p.name }}</h3>
+                    <p>{{ p.description }}</p>
+                    <p><strong>${{ p.price }}</strong></p>
+                    <button class="btn-primary">Comprar</button>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No hay productos disponibles en este momento.</p>
+    {% endif %}
+</section>
 {% endblock %}
-
-
 

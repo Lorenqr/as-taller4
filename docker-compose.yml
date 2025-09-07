@@ -8,6 +8,7 @@ services:
       - "8080:8080"
     environment:
       - API_GATEWAY_URL=http://api-gateway:8000
+      - FRONT_SECRET_KEY=supersecretfrontend
     depends_on:
       - api-gateway
 
