@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 from datetime import datetime
 from common.config import settings
 from email_validator import validate_email as ev_validate, EmailNotValidError
+from common.helpers.utils import send_request_to_service, build_service_url, validate_email
 
 # Configuración de logging
 logging.basicConfig(level=logging.INFO)

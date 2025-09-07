@@ -1,91 +1,139 @@
 import os
 import requests
 from fastapi import FastAPI, Request, Form, Response
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
-# Inicializar app
+API_GATEWAY_URL = os.getenv("API_GATEWAY_URL", "http://api-gateway:8000")
+FRONT_SECRET_KEY = os.getenv("FRONT_SECRET_KEY", "frontend_secret_key")
+
 app = FastAPI()
+app.add_middleware(SessionMiddleware, secret_key=FRONT_SECRET_KEY)
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# Middleware de sesión (para manejar cookies en frontend)
-SECRET_KEY = os.getenv("FRONT_SECRET_KEY", "frontend_secret_key")
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
+@app.get("/", response_class=HTMLResponse)
+def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request, "session": request.session})
 
-# URL del API Gateway (se pasa por docker-compose)
-API_GATEWAY_URL = os.getenv("API_GATEWAY_URL", "http://localhost:8000")
-
-# =========================
-# Rutas principales
-# =========================
-
-@app.get("/")
-def home(request: Request):
-    """Página principal mostrando productos"""
-    try:
-        resp = requests.get(f"{API_GATEWAY_URL}/products")
-        products = resp.json() if resp.status_code == 200 else []
-    except Exception:
-        products = []
-    return templates.TemplateResponse("index.html", {"request": request, "products": products})
-
-
-# =========================
-# Login
-# =========================
-@app.get("/login")
-def login_form(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
-
+@app.get("/login", response_class=HTMLResponse)
+def login_get(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request, "session": request.session})
 
 @app.post("/login")
-def login(request: Request, response: Response, username: str = Form(...), password: str = Form(...)):
+def login_post(request: Request, email: str = Form(...), password: str = Form(...)):
     try:
-        resp = requests.post(f"{API_GATEWAY_URL}/auth/login", data={
-            "username": username,
-            "password": password
-        })
-        if resp.status_code == 200:
-            token = resp.json().get("access_token")
+        response = requests.post(
+            f"{API_GATEWAY_URL}/auth/login",
+            data={"username": email, "password": password},
+            timeout=5
+        )
+        if response.status_code == 200:
+            token = response.json()["access_token"]
             request.session["token"] = token
-            return RedirectResponse(url="/", status_code=303)
+            request.session["email"] = email
+            return RedirectResponse("/", status_code=303)
         else:
-            return templates.TemplateResponse("login.html", {"request": request, "error": "Credenciales inválidas"})
+            return templates.TemplateResponse(
+                "login.html",
+                {"request": request, "session": request.session, "error": "Credenciales incorrectas"},
+                status_code=401
+            )
     except Exception:
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Error al conectar con el servidor"})
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "session": request.session, "error": "Error de conexión con el API Gateway"},
+            status_code=502
+        )
 
-
-# =========================
-# Registro
-# =========================
-@app.get("/register")
-def register_form(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
-
-
-@app.post("/register")
-def register(request: Request, username: str = Form(...), email: str = Form(...), password: str = Form(...)):
-    try:
-        resp = requests.post(f"{API_GATEWAY_URL}/auth/register", json={
-            "username": username,
-            "email": email,
-            "password": password
-        })
-        if resp.status_code == 201:
-            return RedirectResponse(url="/login", status_code=303)
-        else:
-            return templates.TemplateResponse("register.html", {"request": request, "error": "Error en el registro"})
-    except Exception:
-        return templates.TemplateResponse("register.html", {"request": request, "error": "Error al conectar con el servidor"})
-
-
-# =========================
-# Logout
-# =========================
 @app.get("/logout")
 def logout(request: Request):
     request.session.clear()
-    return RedirectResponse(url="/", status_code=303)
+    return RedirectResponse("/", status_code=303)
+
+@app.get("/register", response_class=HTMLResponse)
+def register_get(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request, "session": request.session})
+
+@app.post("/register")
+def register_post(request: Request, email: str = Form(...), password: str = Form(...), full_name: str = Form(None)):
+    try:
+        response = requests.post(
+            f"{API_GATEWAY_URL}/auth/register",
+            json={"email": email, "password": password, "full_name": full_name},
+            timeout=5
+        )
+        if response.status_code == 200:
+            return RedirectResponse("/login", status_code=303)
+        else:
+            return templates.TemplateResponse(
+                "register.html",
+                {"request": request, "session": request.session, "error": response.json().get("detail", "Error en el registro")},
+                status_code=400
+            )
+    except Exception:
+        return templates.TemplateResponse(
+            "register.html",
+            {"request": request, "session": request.session, "error": "Error de conexión con el API Gateway"},
+            status_code=502
+        )
+
+@app.get("/products", response_class=HTMLResponse)
+def products(request: Request):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    try:
+        response = requests.get(f"{API_GATEWAY_URL}/products/", headers=headers, timeout=5)
+        if response.status_code == 200:
+            products = response.json()
+            return templates.TemplateResponse("products.html", {"request": request, "session": request.session, "products": products})
+        else:
+            return templates.TemplateResponse(
+                "products.html",
+                {"request": request, "session": request.session, "error": "No se pudieron obtener los productos"},
+                status_code=502
+            )
+    except Exception:
+        return templates.TemplateResponse(
+            "products.html",
+            {"request": request, "session": request.session, "error": "Error de conexión con el API Gateway"},
+            status_code=502
+        )
+
+# --- NUEVO: Agregar producto ---
+@app.get("/add-product", response_class=HTMLResponse)
+def add_product_get(request: Request):
+    return templates.TemplateResponse("add_product.html", {"request": request})
+
+@app.post("/add-product", response_class=HTMLResponse)
+def add_product_post(
+    request: Request,
+    name: str = Form(...),
+    description: str = Form(...),
+    price: float = Form(...),
+    stock: int = Form(...)
+):
+    try:
+        response = requests.post(
+            f"{API_GATEWAY_URL}/products/",
+            json={"name": name, "description": description, "price": price, "stock": stock},
+            timeout=5
+        )
+        if response.status_code == 200:
+            return templates.TemplateResponse(
+                "add_product.html",
+                {"request": request, "success": "Producto agregado correctamente"}
+            )
+        else:
+            return templates.TemplateResponse(
+                "add_product.html",
+                {"request": request, "error": "Error al agregar el producto"}
+            )
+    except Exception:
+        return templates.TemplateResponse(
+            "add_product.html",
+            {"request": request, "error": "No se pudo conectar con el API Gateway"}
+        )

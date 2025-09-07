@@ -1,0 +1,7 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="48" height="48" rx="12" fill="#2D3E50"/>
+    <circle cx="24" cy="24" r="14" fill="#F5C16C" stroke="#B8860B" stroke-width="2"/>
+    <path d="M16 32C18 28 30 28 32 32" stroke="#B8860B" stroke-width="2" stroke-linecap="round"/>
+    <ellipse cx="24" cy="22" rx="6" ry="4" fill="#FFF8E1" stroke="#B8860B" stroke-width="1.5"/>
+    <text x="24" y="28" text-anchor="middle" fill="#2D3E50" font-size="8" font-family="Arial" font-weight="bold">Arte</text>
+</svg>

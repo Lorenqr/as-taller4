@@ -1,7 +1,7 @@
 fastapi
 uvicorn
 jinja2
-httpx
-python-multipart
 requests
+python-multipart
+starlette
 itsdangerous

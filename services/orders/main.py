@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from common.config import settings
 
-from .models import Base, Order, OrderCreate, OrderRead, OrderItem, OrderItemCreate
+from models import Base, Order, OrderCreate, OrderRead, OrderItem, OrderItemCreate
 
 # Configuración DB
 DATABASE_URL = settings.ORDERS_DB_URL

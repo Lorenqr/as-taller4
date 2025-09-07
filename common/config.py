@@ -2,6 +2,8 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     """Configuraciones globales del proyecto."""
+    MONGODB_URL: str = "mongodb://auth-db:27017"
+    MONGODB_DB: str = "auth"
 
     # Configuración General
     PROJECT_NAME: str = "Ecommerce Microservices"
