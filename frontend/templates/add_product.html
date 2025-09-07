@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>Agregar producto</h2>
-<form method="post" action="/add-product">
+<form method="post" action="/add-product" enctype="multipart/form-data">
     <label>Nombre:</label>
     <input type="text" name="name" required><br>
     <label>Descripción:</label>
@@ -10,6 +10,8 @@
     <input type="number" name="price" step="0.01" required><br>
     <label>Stock:</label>
     <input type="number" name="stock" required><br>
+    <label>Imagen:</label>
+    <input type="file" name="image" accept="image/*"><br>
     <button type="submit">Agregar</button>
 </form>
 {% if error %}

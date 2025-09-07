@@ -1,6 +1,6 @@
 import os
 import requests
-from fastapi import FastAPI, Request, Form, Response
+from fastapi import FastAPI, Request, Form, Response, UploadFile, File
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -17,15 +17,13 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
+    if not request.session.get("email"):
+        return RedirectResponse("/login")
     return templates.TemplateResponse("index.html", {"request": request, "session": request.session})
 
 @app.get("/login", response_class=HTMLResponse)
 def login_get(request: Request):
     return templates.TemplateResponse("login.html", {"request": request, "session": request.session})
-
-@app.get("/cart", response_class=HTMLResponse)
-def cart(request: Request):
-    return templates.TemplateResponse("cart.html", {"request": request})
 
 @app.post("/login")
 def login_post(request: Request, email: str = Form(...), password: str = Form(...)):
@@ -37,9 +35,24 @@ def login_post(request: Request, email: str = Form(...), password: str = Form(..
         )
         if response.status_code == 200:
             token = response.json()["access_token"]
-            request.session["token"] = token
-            request.session["email"] = email
-            return RedirectResponse("/", status_code=303)
+            # Obtener datos del usuario (incluyendo el rol)
+            userinfo = requests.get(
+                f"{API_GATEWAY_URL}/auth/me",
+                headers={"Authorization": f"Bearer {token}"},
+                timeout=5
+            )
+            if userinfo.status_code == 200:
+                user_data = userinfo.json()
+                request.session["token"] = token
+                request.session["email"] = email
+                request.session["role"] = user_data.get("role")
+                return RedirectResponse("/", status_code=303)
+            else:
+                return templates.TemplateResponse(
+                    "login.html",
+                    {"request": request, "session": request.session, "error": "No se pudo obtener información del usuario"},
+                    status_code=401
+                )
         else:
             return templates.TemplateResponse(
                 "login.html",
@@ -63,11 +76,17 @@ def register_get(request: Request):
     return templates.TemplateResponse("register.html", {"request": request, "session": request.session})
 
 @app.post("/register")
-def register_post(request: Request, email: str = Form(...), password: str = Form(...), full_name: str = Form(None)):
+def register_post(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+    full_name: str = Form(...),
+    role: str = Form(...)
+):
     try:
         response = requests.post(
             f"{API_GATEWAY_URL}/auth/register",
-            json={"email": email, "password": password, "full_name": full_name},
+            json={"email": email, "password": password, "full_name": full_name, "role": role},
             timeout=5
         )
         if response.status_code == 200:
@@ -107,9 +126,10 @@ def products(request: Request):
             status_code=502
         )
 
-# --- NUEVO: Agregar producto ---
 @app.get("/add-product", response_class=HTMLResponse)
 def add_product_get(request: Request):
+    if request.session.get("role") != "vendedor":
+        return RedirectResponse("/", status_code=303)
     return templates.TemplateResponse("add_product.html", {"request": request})
 
 @app.post("/add-product", response_class=HTMLResponse)
@@ -118,12 +138,29 @@ def add_product_post(
     name: str = Form(...),
     description: str = Form(...),
     price: float = Form(...),
-    stock: int = Form(...)
+    stock: int = Form(...),
+    image: UploadFile = File(None)
 ):
+    if request.session.get("role") != "vendedor":
+        return RedirectResponse("/", status_code=303)
+    image_url = None
+    if image:
+        uploads_dir = os.path.join("static", "uploads")
+        os.makedirs(uploads_dir, exist_ok=True)
+        file_location = os.path.join(uploads_dir, image.filename)
+        with open(file_location, "wb") as buffer:
+            buffer.write(image.file.read())
+        image_url = f"/static/uploads/{image.filename}"
     try:
         response = requests.post(
             f"{API_GATEWAY_URL}/products/",
-            json={"name": name, "description": description, "price": price, "stock": stock},
+            json={
+                "name": name,
+                "description": description,
+                "price": price,
+                "stock": stock,
+                "image": image_url
+            },
             timeout=5
         )
         if response.status_code == 200:

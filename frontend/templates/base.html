@@ -1,47 +1,25 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ title if title else "E-commerce Artesanal" }}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
-</head>
-<body>
-
-<!-- Navbar -->
-<header class="navbar">
+<nav class="navbar">
     <div class="logo">
-        <img src="{{ url_for('static', path='logo.svg') }}" alt="Logo" style="height:40px;">
+        <a href="/"><img src="{{ url_for('static', path='logo.jpeg') }}" alt="Artesanías"></a>
         <span class="site-title">Artesanías</span>
     </div>
     <nav>
-        <a href="/">Inicio</a>
         <a href="/products">Productos</a>
-        <a href="/cart">Carrito</a>
-        <a href="/checkout">Checkout</a>
         {% if session and session.email %}
-            <a href="#">👤 {{ session.email }}</a>
-            <a href="/add-product">Agregar producto</a>
+            <span>👤 {{ session.email }}</span>
+            {% if session.role == "vendedor" %}
+                <a href="/add-product">Agregar producto</a>
+            {% endif %}
             <a href="/logout">Cerrar sesión</a>
         {% else %}
             <a href="/login">Iniciar sesión</a>
             <a href="/register">Registrarse</a>
         {% endif %}
     </nav>
-</header>
-
-<!-- Contenido -->
-<main>
-    {% block content %}{% endblock %}
-</main>
-
-<!-- Footer -->
+</nav>
 <footer>
-    <p>🛍️ E-commerce Artesanal - 2025</p>
+    &copy; E-commerce Artesanal - 2025
 </footer>
-</body>
-</html>
-
 
 
 

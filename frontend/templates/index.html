@@ -1,10 +1,8 @@
 {% extends "base.html" %}
-
 {% block content %}
-<section class="text-center">
-    <h1>Bienvenido a E-commerce Artesanal</h1>
-    <p class="meta">Compra directo de artesanos locales y apoya la economía regional.</p>
-
+<section class="text-center" style="margin:40px 0;">
+    <h1>Bienvenido a Artesanías</h1>
+    <p>Compra directo de artesanos locales y apoya la economía regional.</p>
     <a href="/products" class="btn-primary">Ver productos</a>
 </section>
 
@@ -16,12 +14,10 @@
     {% if products %}
         <div class="products-grid">
             {% for p in products %}
-            
                 <div class="product-card">
                     <h3>{{ p.name }}</h3>
                     <p>{{ p.description }}</p>
                     <p><strong>${{ p.price }}</strong></p>
-                    <button class="btn-primary">Comprar</button>
                 </div>
             {% endfor %}
         </div>
@@ -30,4 +26,3 @@
     {% endif %}
 </section>
 {% endblock %}
-
