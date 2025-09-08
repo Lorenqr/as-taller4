@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Mi perfil</h2>
+<p><strong>Email:</strong> {{ session.email }}</p>
+<p><strong>Rol:</strong> {{ session.role|title }}</p>
+{% endblock %}

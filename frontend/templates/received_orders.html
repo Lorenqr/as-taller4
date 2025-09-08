@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Pedidos recibidos</h2>
+{% if orders %}
+<ul>
+    {% for order in orders %}
+    <li>
+        Pedido #{{ order.id }} - Cliente: {{ order.client_email }}<br>
+        Estado: {{ order.status }}<br>
+        Total: ${{ order.total }}
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No tienes pedidos recibidos aún.</p>
+{% endif %}
+{% endblock %}

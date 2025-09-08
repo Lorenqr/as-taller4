@@ -28,6 +28,7 @@ app = FastAPI()
 class User(BaseModel):
     email: EmailStr
     full_name: Optional[str] = None
+    role: str
 
 class UserInDB(User):
     hashed_password: str

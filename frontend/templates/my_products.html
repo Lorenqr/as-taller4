@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Catálogo de productos</h2>
+<h2>Mis productos</h2>
+<a href="/add-product" class="btn-primary">Agregar nuevo producto</a>
 {% if products %}
 <ul>
     {% for product in products %}
@@ -11,19 +12,12 @@
         {% if product.image %}
             <img src="{{ product.image }}" alt="{{ product.name }}" width="100"><br>
         {% endif %}
-        {% if session.role == "None" %}
-            <form method="post" action="/cart/add">
-                <input type="hidden" name="product_id" value="{{ product.id }}">
-                <button type="submit">Agregar al carrito</button>
-            </form>
-        {% endif %}
+        <a href="/edit-product/{{ product.id }}">Editar</a>
+        <a href="/delete-product/{{ product.id }}">Eliminar</a>
     </li>
     {% endfor %}
 </ul>
 {% else %}
-<p>No hay productos disponibles.</p>
-{% endif %}
-{% if error %}
-<p style="color:red;">{{ error }}</p>
+<p>No tienes productos publicados.</p>
 {% endif %}
 {% endblock %}

@@ -1,26 +1,46 @@
-<nav class="navbar">
-    <div class="logo">
-        <a href="/"><img src="{{ url_for('static', path='logo.jpeg') }}" alt="Artesanías"></a>
-        <span class="site-title">Artesanías</span>
-    </div>
-    <nav>
-        <a href="/products">Productos</a>
-        {% if session and session.email %}
-            <span>👤 {{ session.email }}</span>
-            {% if session.role == "vendedor" %}
-                <a href="/add-product">Agregar producto</a>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Artesanías</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="/"><img src="{{ url_for('static', path='Logo.png') }}" alt="Artesanías"></a>
+            <span class="site-title">Artesanías</span>
+        </div>
+        <nav>
+            <a href="/">Inicio</a>
+            {% if session and session.email %}
+                <span>👤 {{ session.email }}</span>
+                <a href="/profile">Mi perfil</a>
+                
+                {% if session.role == "cliente" %}
+                    <a href="/cart">Mi carrito</a>
+                    <a href="/orders">Mis pedidos</a>
+                {% elif session.role == "vendedor" %}
+                    <a href="/my-products">Mis productos</a>
+                    <a href="/add-product">Agregar producto</a>
+                    <a href="/received-orders">Pedidos recibidos</a>
+                {% endif %}
+                <a href="/logout">Cerrar sesión</a>
+            {% else %}
+                <a href="/login">Iniciar sesión</a>
+                <a href="/register">Registrarse</a>
             {% endif %}
-            <a href="/logout">Cerrar sesión</a>
-        {% else %}
-            <a href="/login">Iniciar sesión</a>
-            <a href="/register">Registrarse</a>
-        {% endif %}
+        </nav>
     </nav>
-</nav>
-<footer>
-    &copy; E-commerce Artesanal - 2025
-</footer>
-
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer>
+        &copy; E-commerce Artesanal - 2025
+    </footer>
+</body>
+</html>
 
 
 

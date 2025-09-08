@@ -1,23 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>Agregar producto</h2>
-<form method="post" action="/add-product" enctype="multipart/form-data">
-    <label>Nombre:</label>
+<form method="post" enctype="multipart/form-data" action="/add-product">
+    <label for="name">Nombre:</label>
     <input type="text" name="name" required><br>
-    <label>Descripción:</label>
-    <input type="text" name="description" required><br>
-    <label>Precio:</label>
+    <label for="description">Descripción:</label>
+    <textarea name="description" required></textarea><br>
+    <label for="price">Precio:</label>
     <input type="number" name="price" step="0.01" required><br>
-    <label>Stock:</label>
+    <label for="stock">Stock:</label>
     <input type="number" name="stock" required><br>
-    <label>Imagen:</label>
-    <input type="file" name="image" accept="image/*"><br>
-    <button type="submit">Agregar</button>
+    <label for="image">Imagen:</label>
+    <input type="file" name="image"><br>
+    <button type="submit" class="btn-primary">Agregar</button>
 </form>
-{% if error %}
-  <div style="color:red;">{{ error }}</div>
-{% endif %}
 {% if success %}
-  <div style="color:green;">{{ success }}</div>
+<p style="color:green;">{{ success }}</p>
+{% endif %}
+{% if error %}
+<p style="color:red;">{{ error }}</p>
 {% endif %}
 {% endblock %}

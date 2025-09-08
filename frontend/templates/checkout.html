@@ -8,14 +8,19 @@
     <li>{{ item.name }} - ${{ item.price }}</li>
     {% endfor %}
 </ul>
-
-<p><strong>Total a pagar: ${{ total }}</strong></p>
-
+<p><strong>Total: ${{ total }}</strong></p>
 <form method="post" action="/checkout">
-    <button type="submit" class="btn-primary">Confirmar compra y pagar</button>
+    <button type="submit" class="btn-primary">Pagar</button>
 </form>
 {% else %}
-<p>Tu carrito está vacío.</p>
+<p>No tienes productos en tu carrito.</p>
+{% endif %}
+
+{% if success %}
+<p style="color:green;">{{ success }}</p>
+{% endif %}
+{% if error %}
+<p style="color:red;">{{ error }}</p>
 {% endif %}
 
 {% endblock %}

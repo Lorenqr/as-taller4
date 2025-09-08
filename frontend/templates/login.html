@@ -7,6 +7,10 @@
     <div class="meta" style="color:red;">❌ Credenciales inválidas</div>
     {% endif %}
 
+    {% if request.query_params.get('success') %}
+    <div style="color:green;">¡Registro exitoso!</div>
+    {% endif %}
+
     <form method="post" action="/login">
         <div class="form-group">
         <label for="email">Correo electrónico</label>
@@ -18,6 +22,9 @@
         </div>
         <button type="submit" class="btn-primary">Ingresar</button>
     </form>
+    {% if error %}
+    <div style="color:red;">{{ error }}</div>
+    {% endif %}
     <p class="meta">¿No tienes cuenta? <a href="/register">Regístrate aquí</a></p>
 </div>
 {% endblock %}
